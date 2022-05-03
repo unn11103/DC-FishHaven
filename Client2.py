@@ -14,7 +14,7 @@ import pickle
 IP = socket.gethostbyname(socket.gethostname())
 PORT = 8003
 ADDR = (IP, PORT)
-MSG_SIZE = 1024
+MSG_SIZE = 4096
 FORMAT = "utf-8"
 DISCONNECT_MSG = "!DISCONNECT"
 
@@ -30,9 +30,15 @@ class Client:
         self.msg = self.connect()
         self.payload = Payload()
         self.pond = pond
+        self.messageQ = []
 
     def get_msg(self):
-        return self.msg
+        while True:
+            time.sleep(0.5)
+            msg = pickle.loads(self.client.recv(MSG_SIZE))
+            if(msg):
+                self.messageQ.append(msg)
+                self.handle_msg(msg)
     
     def connect(self):
         try:
@@ -44,12 +50,14 @@ class Client:
 
     def send_pond(self):
         try:
-            self.payload.action = "SEND"
-            self.payload.data = self.pond
-            print("Client send :",self.pond)
-            self.client.send(pickle.dumps(self.payload))
-            msg =  pickle.loads(self.client.recv(MSG_SIZE))
-            return self.handle_msg(msg)
+            while True:
+                time.sleep(2)
+                self.payload.action = "SEND"
+                self.payload.data = self.pond
+                #print("Client send :",self.pond)
+                self.client.send(pickle.dumps(self.payload))
+                #msg =  pickle.loads(self.client.recv(MSG_SIZE))
+                #return self.handle_msg(msg)
 
         except socket.error as e:
             print(e)
@@ -57,6 +65,7 @@ class Client:
     def migrate_fish(self, fishData , destination):
         ### Migration takes a special object for the payload to pickup : The destination pond's name 
         try:
+
             migration = {
                 "destination" : destination,
                 "fish" : fishData
@@ -65,7 +74,7 @@ class Client:
             self.payload.data = migration
 
             self.client.send(pickle.dumps(self.payload))
-            print("=======MIGRATED=======")  
+            print("=======MIGRATED=======")            
             ### Handle our fish in the pond
             # // TO BE IMPLEMENTED
 
@@ -94,6 +103,7 @@ class Client:
     def handle_msg(self, msg):
         msg_action = msg.action
         msg_object = msg.data
+        #print(self.messageQ)
 
         if(msg_action == "SEND") :
             self.other_ponds[msg_object.pondName] = msg_object #Update in the dict key = pondname, values = <PondData>
@@ -126,22 +136,15 @@ if __name__ == "__main__":
     p = PondData("sick salmon")
     p.addFish(f1)
     p.addFish(f2)
-    c = Client(p) 
     connected = True
-    while(connected) :
-   
-        c.send_pond()
-        time.sleep(3)
-        # print("Client send :",f)
-        # msg = pickle.dumps(f)
-        # # message = bytes(f'{len(msg):<{HEADER}}',FORMAT) + msg
-        # #"MIGRATE FROM .... TO ...." + msg(fish class)
-        # # msg = "hi"
-        # pond.send(msg) #.encode(FORMAT)
-        #     # self.client.send(pickle.dumps(data))
-        #     # return pickle.loads(self.client.recv(2048))
-        # if msg == DISCONNECT_MSG:
-        #     connected = False
-        # else:
-        #     msg = pickle.loads(pond.recv(MSG_SIZE))#.decode(FORMAT)
-        #     print(f"Vivisystem : {msg}")
+    c = Client(p)
+    msg_handler = threading.Thread(target=c.get_msg)   
+    msg_handler.start() 
+    send_handler = threading.Thread(target=c.send_pond)
+    send_handler.start()
+    # while(connected) :
+
+    #     #c.migrate_fish(f1,"sick salmon")
+    #     #c.migrate_fish(f2,"sick salmon")
+
+

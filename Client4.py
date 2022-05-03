@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     f1 = FishData("Sick Salmon","123456")
     f2 = FishData("Fish2","123456")
-    p = PondData("pla")
+    p = PondData("final")
     p.addFish(f1)
     p.addFish(f2)
     connected = True
@@ -142,9 +142,9 @@ if __name__ == "__main__":
     msg_handler.start() 
     send_handler = threading.Thread(target=c.send_pond)
     send_handler.start()
-    c.migrate_fish(f1,"sick salmon")
-    c.migrate_fish(f2,"sick salmon")    
     # while(connected) :
+
+    #     #c.migrate_fish(f1,"sick salmon")
     #     #c.migrate_fish(f2,"sick salmon")
 
 

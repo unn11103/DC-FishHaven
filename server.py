@@ -13,13 +13,14 @@ from queue import Queue
 IP = socket.gethostbyname(socket.gethostname())
 PORT = 8003
 ADDR = (IP, PORT)
-MSG_SIZE = 1024
+MSG_SIZE = 4096
 FORMAT = "utf-8"
 DISCONNECT_MSG = "!DISCONNECT"
 
 all_connections = {}
 
 payload = Payload() #Initialize payload
+messageQ = []
 
 def handle_pond(connection, address):
     print(f"New pond connected from : {address}")
@@ -30,18 +31,22 @@ def handle_pond(connection, address):
         #separate message type
 
         msg = pickle.loads(message)
+        messageQ.append(msg)
 
         if msg.action == DISCONNECT_MSG:
             connected = False
             del all_connections[address]
             for addr, conn in all_connections.items():
                 conn.send(f"{address} disconnected.".encode(FORMAT))
-        print(f"{address} : {msg}")
+        #print(f"{address} : {msg.action}")
 
         for addr, conn in all_connections.items():
-            print(addr, conn)
-            print("The Pond has sent")
-            conn.send(pickle.dumps(msg))
+            #print(addr, conn)
+            #print("The Pond has sent")
+            # finalMsg = messageQ.pop()
+            # print(finalMsg.action)
+            # print(messageQ)
+            conn.sendall(pickle.dumps(msg))
 
     connection.close()
 
