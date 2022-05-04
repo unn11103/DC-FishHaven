@@ -11,8 +11,8 @@ from PondData import PondData
 from Payload import Payload
 
 import pickle
-IP = socket.gethostbyname(socket.gethostname())
-PORT = 8003
+IP = '0.tcp.ap.ngrok.io'#socket.gethostbyname(socket.gethostname())
+PORT = 10760
 ADDR = (IP, PORT)
 MSG_SIZE = 4096
 FORMAT = "utf-8"
@@ -31,10 +31,11 @@ class Client:
         self.payload = Payload()
         self.pond = pond
         self.messageQ = []
+        self.disconnected_ponds = {}
 
     def get_msg(self):
         while True:
-            time.sleep(0.5)
+            #time.sleep(0.5)
             msg = pickle.loads(self.client.recv(MSG_SIZE))
             if(msg):
                 self.messageQ.append(msg)
@@ -110,12 +111,18 @@ class Client:
             print(self.other_ponds)
             return msg
         
-        if(msg_action == "MIGRATE"):
+        elif(msg_action == "MIGRATE"):
             if(self.pond.pondName == msg_object["destination"]):
                 print("=======RECIEVED MIGRATION=======")
                 self.pond.addFish(msg_object["fish"])
                 print(self.pond.fishes)
                 print("================================")
+
+        elif(msg_action == DISCONNECT_MSG):
+            print("DIS ACTION",msg_action)
+            print("DIS OBJECT",msg_object)
+            #self.disconnected_ponds[msg_object.pondName] = msg_object
+            self.other_ponds.pop(msg_object.pondName)
         
         else:
             pass
@@ -142,9 +149,6 @@ if __name__ == "__main__":
     msg_handler.start() 
     send_handler = threading.Thread(target=c.send_pond)
     send_handler.start()
-    c.migrate_fish(f1,"sick salmon")
-    c.migrate_fish(f2,"sick salmon")    
-    # while(connected) :
-    #     #c.migrate_fish(f2,"sick salmon")
-
-
+    # time.sleep(3)
+    # c.migrate_fish(f1,"sick salmon")
+    # c.migrate_fish(f2,"sick salmon")

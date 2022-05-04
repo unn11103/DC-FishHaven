@@ -9,8 +9,8 @@ from Payload import Payload
 import pickle
 from queue import Queue
 
-IP = socket.gethostbyname(socket.gethostname())
-PORT = 8016
+IP = 'localhost'#socket.gethostbyname(socket.gethostname())
+PORT = 8081
 ADDR = (IP, PORT)
 MSG_SIZE = 4096
 FORMAT = "utf-8"
